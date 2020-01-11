@@ -138,7 +138,6 @@ module.exports = class ContextMenuBuilder {
     this.addCut(menu, menuInfo);
     this.addCopy(menu, menuInfo);
     this.addPaste(menu, menuInfo);
-    this.addInspectElement(menu, menuInfo);
     this.processMenu(menu, menuInfo);
 
     return menu;
@@ -178,7 +177,6 @@ module.exports = class ContextMenuBuilder {
       this.addImageItems(menu, menuInfo);
     }
 
-    this.addInspectElement(menu, menuInfo);
     this.processMenu(menu, menuInfo);
 
     return menu;
@@ -194,7 +192,6 @@ module.exports = class ContextMenuBuilder {
 
     this.addSearchItems(menu, menuInfo);
     this.addCopy(menu, menuInfo);
-    this.addInspectElement(menu, menuInfo);
     this.processMenu(menu, menuInfo);
 
     return menu;
@@ -211,7 +208,6 @@ module.exports = class ContextMenuBuilder {
     if (this.isSrcUrlValid(menuInfo)) {
       this.addImageItems(menu, menuInfo);
     }
-    this.addInspectElement(menu, menuInfo);
     this.processMenu(menu, menuInfo);
 
     return menu;
@@ -387,23 +383,6 @@ module.exports = class ContextMenuBuilder {
    */
   addSeparator(menu) {
     menu.append(new MenuItem({type: 'separator'}));
-    return menu;
-  }
-
-  /**
-   * Adds the "Inspect Element" menu item.
-   */
-  addInspectElement(menu, menuInfo, needsSeparator=true) {
-    let target = this.getWebContents();
-    if (!this.debugMode) return menu;
-    if (needsSeparator) this.addSeparator(menu);
-
-    let inspect = new MenuItem({
-      label: this.stringTable.inspectElement(),
-      click: () => target.inspectElement(menuInfo.x, menuInfo.y)
-    });
-
-    menu.append(inspect);
     return menu;
   }
 
