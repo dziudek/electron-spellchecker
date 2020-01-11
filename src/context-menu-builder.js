@@ -108,20 +108,9 @@ module.exports = class ContextMenuBuilder {
    */
   async buildMenuForElement(info) {
     //d(`Got context menu event with args: ${JSON.stringify(info)}`);
-
-    if (info.linkURL && info.linkURL.length > 0) {
-      return this.buildMenuForLink(info);
-    }
-
-    if (info.hasImageContents && info.srcURL && info.srcURL.length > 1) {
-      return this.buildMenuForImage(info);
-    }
-
     if (info.isEditable || (info.inputFieldType && info.inputFieldType !== 'none')) {
       return await this.buildMenuForTextInput(info);
     }
-
-    return this.buildMenuForText(info);
   }
 
   /**
@@ -134,7 +123,6 @@ module.exports = class ContextMenuBuilder {
 
     await this.addSpellingItems(menu, menuInfo);
     this.addSearchItems(menu, menuInfo);
-
     this.addCut(menu, menuInfo);
     this.addCopy(menu, menuInfo);
     this.addPaste(menu, menuInfo);
@@ -142,77 +130,7 @@ module.exports = class ContextMenuBuilder {
 
     return menu;
   }
-
-  /**
-   * Builds a menu applicable to a link element.
-   *
-   * @return {Menu}  The `Menu`
-   */
-  buildMenuForLink(menuInfo) {
-    let menu = new Menu();
-    let isEmailAddress = menuInfo.linkURL.startsWith('mailto:');
-
-    let copyLink = new MenuItem({
-      label: isEmailAddress ? this.stringTable.copyMail() : this.stringTable.copyLinkUrl(),
-      click: () => {
-        // Omit the mailto: portion of the link; we just want the address
-        clipboard.writeText(isEmailAddress ?
-          menuInfo.linkText : menuInfo.linkURL);
-      }
-    });
-
-    let openLink = new MenuItem({
-      label: this.stringTable.openLinkUrl(),
-      click: () => {
-        //d(`Navigating to: ${menuInfo.linkURL}`);
-        shell.openExternal(menuInfo.linkURL);
-      }
-    });
-
-    menu.append(copyLink);
-    menu.append(openLink);
-
-    if (this.isSrcUrlValid(menuInfo)) {
-      this.addSeparator(menu);
-      this.addImageItems(menu, menuInfo);
-    }
-
-    this.processMenu(menu, menuInfo);
-
-    return menu;
-  }
-
-  /**
-   * Builds a menu applicable to a text field.
-   *
-   * @return {Menu}  The `Menu`
-   */
-  buildMenuForText(menuInfo) {
-    let menu = new Menu();
-
-    this.addSearchItems(menu, menuInfo);
-    this.addCopy(menu, menuInfo);
-    this.processMenu(menu, menuInfo);
-
-    return menu;
-  }
-
-  /**
-   * Builds a menu applicable to an image.
-   *
-   * @return {Menu}  The `Menu`
-   */
-  buildMenuForImage(menuInfo) {
-    let menu = new Menu();
-
-    if (this.isSrcUrlValid(menuInfo)) {
-      this.addImageItems(menu, menuInfo);
-    }
-    this.processMenu(menu, menuInfo);
-
-    return menu;
-  }
-
+  
   /**
    * Checks if the current text selection contains a single misspelled word and
    * if so, adds suggested spellings as individual menu items.
@@ -308,31 +226,6 @@ module.exports = class ContextMenuBuilder {
     return menu;
   }
 
-  isSrcUrlValid(menuInfo) {
-    return menuInfo.srcURL && menuInfo.srcURL.length > 0;
-  }
-
-  /**
-   * Adds "Copy Image" and "Copy Image URL" items when `src` is valid.
-   */
-  addImageItems(menu, menuInfo) {
-    let copyImage = new MenuItem({
-      label: this.stringTable.copyImage(),
-      click: () => this.convertImageToBase64(menuInfo.srcURL,
-        (dataURL) => clipboard.writeImage(nativeImage.createFromDataURL(dataURL)))
-    });
-
-    menu.append(copyImage);
-
-    let copyImageUrl = new MenuItem({
-      label: this.stringTable.copyImageUrl(),
-      click: () => clipboard.writeText(menuInfo.srcURL)
-    });
-
-    menu.append(copyImageUrl);
-    return menu;
-  }
-
   /**
    * Adds the Cut menu item
    */
@@ -384,31 +277,5 @@ module.exports = class ContextMenuBuilder {
   addSeparator(menu) {
     menu.append(new MenuItem({type: 'separator'}));
     return menu;
-  }
-
-  /**
-   * Converts an image to a base-64 encoded string.
-   *
-   * @param  {String} url           The image URL
-   * @param  {Function} callback    A callback that will be invoked with the result
-   * @param  {String} outputFormat  The image format to use, defaults to 'image/png'
-   */
-  convertImageToBase64(url, callback, outputFormat='image/png') {
-    let canvas = document.createElement('CANVAS');
-    let ctx = canvas.getContext('2d');
-    let img = new Image();
-    img.crossOrigin = 'Anonymous';
-
-    img.onload = () => {
-      canvas.height = img.height;
-      canvas.width = img.width;
-      ctx.drawImage(img, 0, 0);
-
-      let dataURL = canvas.toDataURL(outputFormat);
-      canvas = null;
-      callback(dataURL);
-    };
-
-    img.src = url;
   }
 }
