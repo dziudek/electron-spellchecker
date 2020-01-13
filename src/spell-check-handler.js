@@ -186,7 +186,15 @@ module.exports = class SpellCheckHandler {
    * @param {Function} fn   The function which will operate like console.log
    */
   static setLogger(fn) {
-    d = fn;
+    // d = fn;
+    d = console.info;
+  }
+
+  /**
+   * Used to set spellchecker again
+   */
+  reinitialize () {
+    this.setSpellCheckProvider(webFrame);
   }
 
   /**
@@ -204,7 +212,7 @@ module.exports = class SpellCheckHandler {
   attachToInput(inputText=null) {
     // OS X has no need for any of this
     if (isMac && !inputText) {
-      return Subscription.EMPTY;
+        return Subscription.EMPTY;
     }
 
     let possiblySwitchedCharacterSets = new Subject();
